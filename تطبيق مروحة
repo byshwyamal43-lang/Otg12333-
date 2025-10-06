@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>بنك سبوطي تايتن</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background-color: #fce4ec;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #d81b60; }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 18px;
+      background-color: #ff80ab;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+    .fruit-select { margin: 10px; }
+  </style>
+</head>
+<body>
+
+  <div id="login">
+    <h1>بنك سبوطي تايتن</h1>
+    <input type="text" id="username" placeholder="اكتب اسم المستخدم"><br><br>
+    <button onclick="startApp()">ابدأ</button>
+  </div>
+
+  <div id="main" class="hidden">
+    <h2>مرحبا <span id="userDisplay"></span>!</h2>
+    <p>الفلوس: <span id="moneyDisplay"></span> جنيه</p>
+    <p>عدد الزبائن اليوم: <span id="buyersDisplay">0</span></p>
+
+    <button onclick="showSell()">بيع بيع يبيع</button>
+    <button onclick="showBuy()">شراء</button>
+    <button onclick="saveData()">تفعيل الحفظ</button>
+    <button onclick="resetApp()">إعادة ضبط</button>
+  </div>
+
+  <div id="sellPage" class="hidden">
+    <h3>اختر نوع الفاكهة للبيع:</h3>
+    <select id="fruitType" class="fruit-select">
+      <option value="mango">منجة</option>
+      <option value="apple">تفاح</option>
+      <option value="banana">موز</option>
+    </select><br>
+    <p>الكمية المتاحة: <span id="fruitAmount"></span></p>
+    <button onclick="sellFruit()">بيع الآن</button>
+    <p id="sellMessage"></p>
+    <button onclick="backToMain()">رجوع</button>
+  </div>
+
+  <div id="buyPage" class="hidden">
+    <h3>شراء فواكه جديدة</h3>
+    <p>الفلوس المتاحة: <span id="moneyBuyDisplay"></span> جنيه</p>
+    <select id="buyFruitType" class="fruit-select">
+      <option value="mango">منجة</option>
+      <option value="apple">تفاح</option>
+      <option value="banana">موز</option>
+    </select><br>
+    <input type="number" id="buyAmount" placeholder="كمية الشراء"><br><br>
+    <button onclick="buyFruit()">شراء</button>
+    <p id="buyMessage"></p>
+    <button onclick="backToMain()">رجوع</button>
+  </div>
+
+  <script>
+    let user = "";
+    let money = 0;
+    let fruits = { mango: 10, apple: 10, banana: 10 };
+    let buyersToday = 0;
+
+    function startApp() {
+      user = document.getElementById("username").value || "سبوطي";
+      loadData();
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("main").classList.remove("hidden");
+      updateMain();
+    }
+
+    function updateMain() {
+      document.getElementById("userDisplay").textContent = user;
+      document.getElementById("moneyDisplay").textContent = money;
+      document.getElementById("buyersDisplay").textContent = buyersToday;
+    }
+
+    function showSell() {
+      document.getElementById("main").classList.add("hidden");
+      document.getElementById("sellPage").classList.remove("hidden");
+      updateFruitAmount();
+    }
+
+    function showBuy() {
+      document.getElementById("main").classList.add("hidden");
+      document.getElementById("buyPage").classList.remove("hidden");
+      document.getElementById("moneyBuyDisplay").textContent = money;
+    }
+
+    function backToMain() {
+      document.getElementById("sellPage").classList.add("hidden");
+      document.getElementById("buyPage").classList.add("hidden");
+      document.getElementById("main").classList.remove("hidden");
+      updateMain();
+    }
+
+    function updateFruitAmount() {
+      const type = document.getElementById("fruitType").value;
+      document.getElementById("fruitAmount").textContent = fruits[type];
+      document.getElementById("sellMessage").textContent = "";
+    }
+
+    function sellFruit() {
+      const type = document.getElementById("fruitType").value;
+      const demand = Math.floor(Math.random() * 15) + 1;
+      if (fruits[type] >= demand) {
+        fruits[type] -= demand;
+        const earned = demand * 5;
+        money += earned;
+        buyersToday++;
+        document.getElementById("sellMessage").textContent = `تم البيع! ربحت ${earned} جنيه من ${demand} ${type}`;
+      } else {
+        document.getElementById("sellMessage").textContent = "الطلبية أكبر من مخزونك! روح اشتري من زر شراء.";
+      }
+      updateFruitAmount();
+    }
+
+    function buyFruit() {
+      const type = document.getElementById("buyFruitType").value;
+      const amount = parseInt(document.getElementById("buyAmount").value);
+      const cost = amount * 5;
+      if (money >= cost) {
+        fruits[type] += amount;
+        money -= cost;
+        document.getElementById("buyMessage").textContent = `تم شراء ${amount} ${type} بـ ${cost} جنيه`;
+      } else {
+        document.getElementById("buyMessage").textContent = "ما معكش فلوس كفاية!";
+      }
+      document.getElementById("moneyBuyDisplay").textContent = money;
+    }
+
+    function saveData() {
+      localStorage.setItem("bankUser", user);
+      localStorage.setItem("bankMoney", money);
+      localStorage.setItem("bankFruits", JSON.stringify(fruits));
+      localStorage.setItem("bankBuyers", buyersToday);
+      alert("تم حفظ البيانات!");
+    }
+
+    function loadData() {
+      const savedUser = localStorage.getItem("bankUser");
+      if (savedUser) {
+        user = savedUser;
+        money = parseInt(localStorage.getItem("bankMoney")) || 0;
+        fruits = JSON.parse(localStorage.getItem("bankFruits")) || fruits;
+        buyersToday = parseInt(localStorage.getItem("bankBuyers")) || 0;
+      } else {
+        money = 0;
+        fruits = { mango: 10, apple: 10, banana: 10 };
+        buyersToday = 0;
+      }
+    }
+
+    function resetApp() {
+      localStorage.clear();
+      location.reload();
+    }
+  </script>
+</body>
+</html>
